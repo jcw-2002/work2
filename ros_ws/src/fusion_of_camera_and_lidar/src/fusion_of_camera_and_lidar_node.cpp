@@ -1,5 +1,6 @@
 // fusion_of_camera_and_lidar
 #include <vector>
+#include <iostream>
 using namespace std;
 
 #include <ros/ros.h>
@@ -26,6 +27,7 @@ void projection();
 void lidarCallback(const sensor_msgs::PointCloud2ConstPtr &msg)
 {
     //将激光雷达信息转化为pcl可用数据类型
+    ROS_INFO("lidarCallback");
     pcl::fromROSMsg(*msg, *cloud);
 
     return;
@@ -38,6 +40,7 @@ void lidarCallback(const sensor_msgs::PointCloud2ConstPtr &msg)
 
 void cameraCallback(const sensor_msgs::ImageConstPtr &msg)
 {
+    ROS_INFO("cameraCallback");
     static cv_bridge::CvImagePtr cv_image;
     cv_image = cv_bridge::toCvCopy(msg);
     image = cv_image->image;
@@ -54,17 +57,22 @@ void cameraCallback(const sensor_msgs::ImageConstPtr &msg)
 void pre_process()
 {
 
-    cv::FileStorage fs_read("../config/calibration_out.yml", cv::FileStorage::READ);
+    cv::FileStorage fs_read("./src/fusion_of_camera_and_lidar/config/calibration_out.yml", cv::FileStorage::READ);
+    
+    cout << "open .yml file!" << endl;
     fs_read["CameraExtrinsicMat"] >> extrinsic_mat;
+    cout << "extrinsic_mat" << extrinsic_mat << endl;
     fs_read["CameraMat"] >> camera_mat;
     fs_read["DistCoeff"] >> dist_coeff;
     fs_read.release();
+    cout << "close .yml file!" << endl;
 
     rotate_mat = cv::Mat(3, 3, cv::DataType<double>::type);
     for (int i = 0; i < 3; i++)
     {
         for (int j = 0; j < 3; j++)
         {
+            cout << "i=" << i << ",j=" << j << endl;
             rotate_mat.at<double>(i, j) = extrinsic_mat.at<double>(j, i);
         }
     }
