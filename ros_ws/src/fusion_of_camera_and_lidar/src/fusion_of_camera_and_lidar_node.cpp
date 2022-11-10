@@ -1,6 +1,7 @@
 // fusion_of_camera_and_lidar
 #include <vector>
 #include <iostream>
+#include <math.h>
 using namespace std;
 
 #include <ros/ros.h>
@@ -22,6 +23,10 @@ ros::Publisher cloud_pub;
 
 cv::Mat extrinsic_mat, camera_mat, dist_coeff;
 cv::Mat rotate_mat, transform_vec;
+
+int color[21][3] = {{255, 0, 0}, {255, 69, 0}, {255, 99, 71}, {255, 140, 0}, {255, 165, 0}, {238, 173, 14}, {255, 193, 37}, {255, 255, 0}, {255, 236, 139}, {202, 255, 112}, {0, 255, 0}, {84, 255, 159}, {127, 255, 212}, {0, 229, 238}, {152, 245, 255}, {178, 223, 238}, {126, 192, 238}, {28, 134, 238}, {0, 0, 255}, {72, 118, 255}, {122, 103, 238}};
+
+float color_dis = 1.2; //参考另外GitHub仓库
 
 void projection();
 
@@ -59,7 +64,7 @@ void pre_process()
 {
 
     cv::FileStorage fs_read("./src/fusion_of_camera_and_lidar/config/calibration_out.yml", cv::FileStorage::READ);
-    
+
     cout << "open .yml file!" << endl;
     fs_read["CameraExtrinsicMat"] >> extrinsic_mat;
     cout << "extrinsic_mat" << extrinsic_mat << endl;
@@ -73,7 +78,7 @@ void pre_process()
     {
         for (int j = 0; j < 3; j++)
         {
-            cout << "i=" << i << ",j=" << j << endl;
+            // cout << "i=" << i << ",j=" << j << endl;
             rotate_mat.at<double>(i, j) = extrinsic_mat.at<double>(j, i);
         }
     }
@@ -93,7 +98,7 @@ void projection()
         point.x = cloud->points[i].x;
         point.y = cloud->points[i].y;
         point.z = cloud->points[i].z;
-        points3d.push_back(point);//将点云插入到OpenCV的三维点数据中
+        points3d.push_back(point); //将点云插入到OpenCV的三维点数据中
     }
 
     vector<cv::Point2f> projectedPoints;
@@ -102,35 +107,48 @@ void projection()
     cv::projectPoints(points3d, rotate_mat, transform_vec, camera_mat, dist_coeff, projectedPoints);
 
     //   vector<pcl::PointXYZRGB>  rgb_cloud;
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr rgb_cloud(new pcl::PointCloud<pcl::PointXYZRGB>); //存点云的全局变量
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr rgb_cloud(new pcl::PointCloud<pcl::PointXYZRGB>); //存点云的全局变量
+    std::vector<cv::Scalar> dis_color;                                                       //用于存储点云的颜色信息
+    dis_color.reserve(cloud->size() + 1);
 
     //   rgb_cloud.reserve(cloud->size()+1);
-    for(int i=0;i<projectedPoints.size();i++){
+    for (int i = 0; i < projectedPoints.size(); i++)
+    {
         pcl::PointXYZRGB point_rgb;
-        cv::Point2f p=projectedPoints[i];
-        point_rgb.x=cloud->points[i].x;
-        point_rgb.y=cloud->points[i].y;
-        point_rgb.z=cloud->points[i].z;
-        point_rgb.r=0;
-        point_rgb.g=0;
-        point_rgb.b=0;
-        
-        if(p.y<480&&p.y>=0&&p.x<640&&p.x>=0)
+        cv::Point2f p = projectedPoints[i];
+        point_rgb.x = cloud->points[i].x;
+        point_rgb.y = cloud->points[i].y;
+        point_rgb.z = cloud->points[i].z;
+        point_rgb.r = 0;
+        point_rgb.g = 0;
+        point_rgb.b = 0;
+
+        if (p.y < 480 && p.y >= 0 && p.x < 640 && p.x >= 0)
         {
-            point_rgb.r=int(image.at<cv::Vec3b>(p.y,p.x)[2]);
-            point_rgb.g=int(image.at<cv::Vec3b>(p.y,p.x)[1]);
-            point_rgb.b=int(image.at<cv::Vec3b>(p.y,p.x)[0]);
+            point_rgb.r = int(image.at<cv::Vec3b>(p.y, p.x)[2]);
+            point_rgb.g = int(image.at<cv::Vec3b>(p.y, p.x)[1]);
+            point_rgb.b = int(image.at<cv::Vec3b>(p.y, p.x)[0]);
+            // if (point_rgb.z > 0)
+            {
+                //对地面上的点进行渲染
+                // ROS_INFO("start to get rgb");
+
+                int color_order = int(abs(point_rgb.z) / (color_dis + 0.00001));
+                if (color_order > 20)
+                {
+                    color_order = 20;
+                }
+                dis_color.push_back(cv::Scalar(color[color_order][2], color[color_order][1], color[color_order][0]));
+            }
         }
         rgb_cloud->push_back(point_rgb);
     }
+    // ROS_INFO("color_dis=%0.6f", color_dis);
 
     sensor_msgs::PointCloud2 ros_cloud;
-    pcl::toROSMsg(*rgb_cloud,ros_cloud);
-    ros_cloud.header.frame_id="rslidar";
+    pcl::toROSMsg(*rgb_cloud, ros_cloud);
+    ros_cloud.header.frame_id = "rslidar";
     cloud_pub.publish(ros_cloud);
-
-
-
 
     //下面将投影结果在相机图像中标识出来
     for (int i = 0; i < projectedPoints.size(); i++)
@@ -138,7 +156,7 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr rgb_cloud(new pcl::PointCloud<pcl::PointX
         cv::Point2f p = projectedPoints[i];
         if (p.y < 480 && p.y >= 0 && p.x < 640 && p.x >= 0)
         {
-            cv::circle(image, p, 1, cv::Scalar(0, 0, 255), 1, 8, 0); //画圆圈标识
+            cv::circle(image, p, 1, dis_color[i], 1, 8, 0); //画圆圈标识
         }
     }
     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg(); //将融合后的图像转换为ros消息
@@ -153,8 +171,21 @@ int main(int argc, char **argv)
 
     ros::init(argc, argv, "fusion_of_camera_and_lidar");
     ros::NodeHandle n;
+    // ros::NodeHandle priv_nh("~");
+
+    // if (priv_nh.hasParam("calib_file_path") && priv_nh.hasParam("file_name"))
+    // {
+    //     string path;
+    //     priv_nh.getParam("calib_file_path", path);
+    //     ROS_INFO("get path:%s", path);
+
+    //     return 0;
+    // }
+
+    // priv_nh.getParam("color_distance", color_dis); //获取参数
+    // ROS_INFO("color_dis-init=%0.6f", color_dis);
     image_pub = n.advertise<sensor_msgs::Image>("fusion", 100);
-    cloud_pub=n.advertise<sensor_msgs::PointCloud2>("rgb_cloud",100);
+    cloud_pub = n.advertise<sensor_msgs::PointCloud2>("rgb_cloud", 100);
     ros::Subscriber lidar_sub = n.subscribe("/rslidar_points", 10, lidarCallback);
     ros::Subscriber camera_sub = n.subscribe("/camera/color/image_raw", 10, cameraCallback);
 
