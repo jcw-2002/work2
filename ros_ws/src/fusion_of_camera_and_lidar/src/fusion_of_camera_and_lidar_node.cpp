@@ -18,6 +18,7 @@ using namespace std;
 pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>); //存点云的全局变量
 cv::Mat image;
 ros::Publisher image_pub;
+ros::Publisher cloud_pub;
 
 cv::Mat extrinsic_mat, camera_mat, dist_coeff;
 cv::Mat rotate_mat, transform_vec;
@@ -92,13 +93,44 @@ void projection()
         point.x = cloud->points[i].x;
         point.y = cloud->points[i].y;
         point.z = cloud->points[i].z;
-        points3d.push_back(point);
+        points3d.push_back(point);//将点云插入到OpenCV的三维点数据中
     }
 
     vector<cv::Point2f> projectedPoints;
 
     //这里调用opencv将points3d点云通过外旋转矩阵rotate_mat、平移向量transform_vec、相机内参矩阵dist_coeff
     cv::projectPoints(points3d, rotate_mat, transform_vec, camera_mat, dist_coeff, projectedPoints);
+
+    //   vector<pcl::PointXYZRGB>  rgb_cloud;
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr rgb_cloud(new pcl::PointCloud<pcl::PointXYZRGB>); //存点云的全局变量
+
+    //   rgb_cloud.reserve(cloud->size()+1);
+    for(int i=0;i<projectedPoints.size();i++){
+        pcl::PointXYZRGB point_rgb;
+        cv::Point2f p=projectedPoints[i];
+        point_rgb.x=cloud->points[i].x;
+        point_rgb.y=cloud->points[i].y;
+        point_rgb.z=cloud->points[i].z;
+        point_rgb.r=0;
+        point_rgb.g=0;
+        point_rgb.b=0;
+        
+        if(p.y<480&&p.y>=0&&p.x<640&&p.x>=0)
+        {
+            point_rgb.r=int(image.at<cv::Vec3b>(p.y,p.x)[2]);
+            point_rgb.g=int(image.at<cv::Vec3b>(p.y,p.x)[1]);
+            point_rgb.b=int(image.at<cv::Vec3b>(p.y,p.x)[0]);
+        }
+        rgb_cloud->push_back(point_rgb);
+    }
+
+    sensor_msgs::PointCloud2 ros_cloud;
+    pcl::toROSMsg(*rgb_cloud,ros_cloud);
+    ros_cloud.header.frame_id="rslidar";
+    cloud_pub.publish(ros_cloud);
+
+
+
 
     //下面将投影结果在相机图像中标识出来
     for (int i = 0; i < projectedPoints.size(); i++)
@@ -122,6 +154,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "fusion_of_camera_and_lidar");
     ros::NodeHandle n;
     image_pub = n.advertise<sensor_msgs::Image>("fusion", 100);
+    cloud_pub=n.advertise<sensor_msgs::PointCloud2>("rgb_cloud",100);
     ros::Subscriber lidar_sub = n.subscribe("/rslidar_points", 10, lidarCallback);
     ros::Subscriber camera_sub = n.subscribe("/camera/color/image_raw", 10, cameraCallback);
 
