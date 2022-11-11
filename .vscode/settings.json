@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "geometry": "cpp",
-        "ostream": "cpp"
+        "ostream": "cpp",
+        "vector": "cpp",
+        "dense": "cpp"
     }
 }

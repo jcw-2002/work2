@@ -6,10 +6,9 @@ using namespace std;
 
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
-#include <sensor_msgs/image_encodings.h>
+#include <sensor_msgs/Image.h>
 #include <pcl_conversions/pcl_conversions.h>/* /opt/ros/kinetic/include/pcl_conversions */
 #include <cv_bridge/cv_bridge.h>            /* /opt/ros/kinetic/include/cv_bridge */
-// #include<opencv2/
 
 #include <pcl/point_cloud.h> /* /usr/include/pcl-1.7/pcl */ /* 依赖/usr/include/eigen3/Eigen/ */
 #include <pcl/point_types.h>                                //提供各种点云数据类型
