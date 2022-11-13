@@ -13,7 +13,7 @@ public:
     cv::Mat extrinsic_mat, camera_mat, dist_coeff;
     cv::Mat rotate_mat, transform_vec;
 
-    Eigen::Matrix4f transform, inv_transform; //用于存储雷达点云坐标变换矩阵，这里因为那个坐标变换的函数没有Matrix4d的重载，就用4f吧，应该差不多
+    Eigen::Matrix4d transform, inv_transform; //用于存储雷达点云坐标变换矩阵，这里因为那个坐标变换的函数没有Matrix4d的重载，就用4f吧，应该差不多
 
     my_config();            //初始化配置文件路径，获取当前位置下的配置文件
     my_config(std::string); //获取指定位置下的配置文件

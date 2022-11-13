@@ -3,6 +3,7 @@
         "geometry": "cpp",
         "ostream": "cpp",
         "vector": "cpp",
-        "dense": "cpp"
+        "dense": "cpp",
+        "functional": "cpp"
     }
 }

@@ -1,5 +1,6 @@
 #include <sensor_msgs/Image.h>
-// #include <cv_bridge/cv_bridge.h> /* /opt/ros/kinetic/include/cv_bridge */
+#include <cv_bridge/cv_bridge.h> /* /opt/ros/kinetic/include/cv_bridge */
+
 #include <opencv2/opencv.hpp>
 
 class my_camera
@@ -12,6 +13,7 @@ private:
 
 public:
     my_camera(); //初始化相机图像
+    cv_bridge::CvImagePtr get_image_ptr();
     void cameraCallback(const sensor_msgs::ImageConstPtr &);
     ~my_camera();
 };

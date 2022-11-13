@@ -11,6 +11,11 @@ my_camera::my_camera()
     ROS_INFO("ma_camera inited!");
 }
 
+cv_bridge::CvImagePtr my_camera::get_image_ptr()
+{
+    return this->cv_image_ptr;
+}
+
 void my_camera::cameraCallback(const sensor_msgs::ImageConstPtr &msg)
 {
     ROS_INFO("cameraCallback");
