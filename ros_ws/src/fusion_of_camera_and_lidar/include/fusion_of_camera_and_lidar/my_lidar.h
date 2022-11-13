@@ -1,3 +1,5 @@
+#pragma once
+
 #include <sensor_msgs/PointCloud2.h>
 
 #include <pcl/point_cloud.h> /* /usr/include/pcl-1.7/pcl */ /* 依赖/usr/include/eigen3/Eigen/ */

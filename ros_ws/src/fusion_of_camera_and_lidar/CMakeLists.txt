@@ -125,12 +125,33 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
+  include/${PROJECT_NAME}/
 )
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/fusion_of_camera_and_lidar.cpp
 # )
+
+add_library(my_lidar
+  src/my_lidar.cpp
+  include/${PROJECT_NAME}/my_lidar.h
+)
+add_library(my_camera
+  src/my_camera.cpp
+  include/${PROJECT_NAME}/my_camera.h
+)
+add_library(my_config
+  src/my_config.cpp
+  include/${PROJECT_NAME}/my_config.h
+)
+add_library(fusion
+  src/fusion.cpp
+  include/${PROJECT_NAME}/fusion.h
+)
+
+
+
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -141,7 +162,7 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/fusion_of_camera_and_lidar_node.cpp)
-add_executable(${PROJECT_NAME}_node src/fusion_of_camera_and_lidar_node.cpp)
+add_executable(${PROJECT_NAME}_node src/main.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -162,6 +183,10 @@ target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
   ${OpenCV_LIBRARIES}
+  my_lidar
+  my_camera
+  my_config
+  fusion
 )
 #############
 ## Install ##

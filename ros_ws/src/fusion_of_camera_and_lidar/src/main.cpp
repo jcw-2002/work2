@@ -7,15 +7,21 @@
 
 #include <functional>
 
+using lidarfun = void (*)(const sensor_msgs::PointCloud2ConstPtr &msg);
+using camerafun = void (*)(const sensor_msgs::ImageConstPtr &msg);
+// template <typename F>;
+// using voidfun = void (*)(auto &msg);
+// template <typename F1, typename F2>
 template <typename F>
-// using voidfun = void (*)(const sensor_msgs::PointCloud2ConstPtr &msg);
-using voidfun = void (*)(const F &msg);
-template <typename F>
-voidfun<F> lambda2func(auto lambda)
+lidarfun lambda2func((lambda[](const sensor_msgs::PointCloud2ConstPtr &msg)->void)lambda_in)
 {
-    static auto lambdaback = lambda;
+    /*
+    参考博客：https://blog.csdn.net/xk641018299/article/details/122847599#commentBox
+    感觉这个办法不可取，该例子中给出的是没有输入参数的，我这个例子实际上是既有捕获参数列表又有输入参数列表，暂时先放弃这种思路
+    */
+    auto lambdaback = lambda_in;
     return []()
-    { lambdaback(); };
+    { lambdaback(msg); };
 }
 
 int main(int argc, char **argv)
@@ -35,8 +41,8 @@ int main(int argc, char **argv)
     ros::Subscriber lidar_sub = n.subscribe("/rslidar_points", 10, lambda2func<sensor_msgs::PointCloud2ConstPtr &>([&my_fusion](const sensor_msgs::PointCloud2ConstPtr &msg)
                                                                                                                    { my_fusion.car_lidar.lidarCallback(msg); }));
 
-    ros::Subscriber camera_sub = n.subscribe("/camera/color/image_raw", 10, lambda2func<const sensor_msgs::ImageConstPtr &>([&my_fusion](const sensor_msgs::ImageConstPtr &msg)
-                                                                                                                            { my_fusion.car_camera.cameraCallback(msg); }));
+    // ros::Subscriber camera_sub = n.subscribe("/camera/color/image_raw", 10, lambda2func<const sensor_msgs::ImageConstPtr &>([&my_fusion](const sensor_msgs::ImageConstPtr &msg)
+    //                                                                                                                         { my_fusion.car_camera.cameraCallback(msg); }));
 
     while (ros::ok())
     {

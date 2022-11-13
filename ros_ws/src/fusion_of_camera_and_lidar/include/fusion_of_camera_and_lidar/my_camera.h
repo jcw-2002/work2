@@ -1,3 +1,5 @@
+#pragma once
+
 #include <sensor_msgs/Image.h>
 #include <cv_bridge/cv_bridge.h> /* /opt/ros/kinetic/include/cv_bridge */
 
