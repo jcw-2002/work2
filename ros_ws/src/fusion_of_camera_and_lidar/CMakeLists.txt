@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(fusion_of_camera_and_lidar)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -17,7 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(PCL REQUIRED)
 find_package(OpenCV REQUIRED)
-
+find_package(Threads REQUIRED)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -127,11 +127,17 @@ include_directories(
   ${PCL_INCLUDE_DIRS}
   include/${PROJECT_NAME}
 )
-
+# aux_source_directory(include/${PROJECT_NAME} DIR_SRCS)
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/fusion_of_camera_and_lidar.cpp
 # )
+
+add_library(my_config
+  src/my_config.cpp
+  # include/${PROJECT_NAME}/my_config.h
+)
+
 
 add_library(my_lidar
   src/my_lidar.cpp
@@ -141,10 +147,8 @@ add_library(my_camera
   src/my_camera.cpp
   # include/${PROJECT_NAME}/my_camera.h
 )
-add_library(my_config
-  src/my_config.cpp
-  # include/${PROJECT_NAME}/my_config.h
-)
+target_link_libraries(my_camera  ${catkin_LIBRARIES})
+
 add_library(fusion
   src/fusion.cpp
   # include/${PROJECT_NAME}/fusion.h
@@ -152,9 +156,10 @@ add_library(fusion
   # include/${PROJECT_NAME}/my_lidar.h
   # include/${PROJECT_NAME}/my_camera.h
 )
+target_link_libraries(fusion my_config)
 
 
-link_directories(include/${PROJECT_NAME})
+# link_directories(include/${PROJECT_NAME})
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -165,6 +170,10 @@ link_directories(include/${PROJECT_NAME})
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/fusion_of_camera_and_lidar_node.cpp)
+
+# set(CMAKE_CXX_FLAGS -pthread)
+# message(STATUS "CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
+
 add_executable(${PROJECT_NAME}_node src/main.cpp)
 
 ## Rename C++ executable without prefix
@@ -176,6 +185,7 @@ add_executable(${PROJECT_NAME}_node src/main.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(fusion libmy_config)
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
@@ -186,9 +196,11 @@ target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
   ${OpenCV_LIBRARIES}
-  my_config
-  my_lidar
+  ${CMAKE_THREAD_LIBS_INIT}
+  # ${DIR_SRCS}
   my_camera
+  # my_config
+  my_lidar
   fusion
 )
 #############

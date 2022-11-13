@@ -20,7 +20,7 @@ fusion::fusion(ros::Publisher fused_image_pub)
 {
     int temp_color[21][3] = {{255, 0, 0}, {255, 69, 0}, {255, 99, 71}, {255, 140, 0}, {255, 165, 0}, {238, 173, 14}, {255, 193, 37}, {255, 255, 0}, {255, 236, 139}, {202, 255, 112}, {0, 255, 0}, {84, 255, 159}, {127, 255, 212}, {0, 229, 238}, {152, 245, 255}, {178, 223, 238}, {126, 192, 238}, {28, 134, 238}, {0, 0, 255}, {72, 118, 255}, {122, 103, 238}};
     // this->color = temp_color;
-    std::copy(&temp_color, &temp_color + 21 * 3, &this->color);
+    std::copy(&temp_color[0][0], &temp_color[0][0] + 21 * 3, &this->color[0][0]);
     this->color_dis = 1.2;
     this->fusion_config.read_config();       //读取配置文件，初始化投影以及坐标变换必要矩阵
     this->fused_image_pub = fused_image_pub; //初始化发布者句柄。
