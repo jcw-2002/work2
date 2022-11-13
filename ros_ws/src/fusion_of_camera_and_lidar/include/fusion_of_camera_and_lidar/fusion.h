@@ -19,7 +19,7 @@ private:
     std::vector<cv::Point2f> projectedPoints; //存储投影后的二维点云，放到图片中的点云信息
     std::vector<cv::Scalar> dis_color;        //用于存储点云的颜色信息（根据距离赋值）
 
-    pcl::PointCloud<pcl::PointXYZI>::Ptr transformed_cloud;//存储坐标变换后的点云（原本坐标是相对于雷达本身坐标系的，变换后是相对于相机的也就是图片中显示的点对应的三维坐标位置）
+    pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_cloud;//存储坐标变换后的点云（原本坐标是相对于雷达本身坐标系的，变换后是相对于相机的也就是图片中显示的点对应的三维坐标位置）
 
     cv::Mat fused_image; //存储融合后的图像
 

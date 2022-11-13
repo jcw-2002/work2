@@ -33,8 +33,11 @@ void fusion::init_Points3f()
 
 void fusion::init_color()
 {
-//获取每个点云在相机坐标系的坐标
-  pcl::transformPointCloud (*(this->car_lidar), *transformed_cloud, transform);        //lidar coordinate(forward x+, left y+, up z+) 
-                                                                                         //camera coordiante(right x+, down y+, forward z+) (3D-3D)  
-                                                                                         //using the extrinsic matrix between this two coordinate system
+    //获取每个点云在相机坐标系的坐标
+    pcl::transformPointCloud(*(this->car_lidar.get_cloud_ptr()), *(this->transformed_cloud),this->fusion_config.transform); // lidar coordinate(forward x+, left y+, up z+)
+                                                                                                                             // camera coordiante(right x+, down y+, forward z+) (3D-3D)
+                                                                                                                             // using the extrinsic matrix between this two coordinate system
+
+
+
 }
