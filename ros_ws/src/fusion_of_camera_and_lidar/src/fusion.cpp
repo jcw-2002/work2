@@ -1,7 +1,7 @@
+#include "fusion.h"
 #include "my_config.h"
 #include "my_lidar.h"
 #include "my_camera.h"
-#include "fusion.h"
 
 #include <vector>
 #include <algorithm>

@@ -125,7 +125,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
-  include/${PROJECT_NAME}/
+  include/${PROJECT_NAME}
 )
 
 ## Declare a C++ library
@@ -135,23 +135,26 @@ include_directories(
 
 add_library(my_lidar
   src/my_lidar.cpp
-  include/${PROJECT_NAME}/my_lidar.h
+  # include/${PROJECT_NAME}/my_lidar.h
 )
 add_library(my_camera
   src/my_camera.cpp
-  include/${PROJECT_NAME}/my_camera.h
+  # include/${PROJECT_NAME}/my_camera.h
 )
 add_library(my_config
   src/my_config.cpp
-  include/${PROJECT_NAME}/my_config.h
+  # include/${PROJECT_NAME}/my_config.h
 )
 add_library(fusion
   src/fusion.cpp
-  include/${PROJECT_NAME}/fusion.h
+  # include/${PROJECT_NAME}/fusion.h
+  # include/${PROJECT_NAME}/my_config.h
+  # include/${PROJECT_NAME}/my_lidar.h
+  # include/${PROJECT_NAME}/my_camera.h
 )
 
 
-
+link_directories(include/${PROJECT_NAME})
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -183,9 +186,9 @@ target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
   ${PCL_LIBRARIES}
   ${OpenCV_LIBRARIES}
+  my_config
   my_lidar
   my_camera
-  my_config
   fusion
 )
 #############
