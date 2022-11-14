@@ -27,7 +27,6 @@ fusion::fusion(ros::NodeHandle n)
     std::copy(&temp_color[0][0], &temp_color[0][0] + 21 * 3, &this->color[0][0]);
     this->color_dis = 1.2;
     this->fusion_config.read_config();       //读取配置文件，初始化投影以及坐标变换必要矩阵
-    this->fused_image_pub = fused_image_pub; //初始化发布者句柄。
     ROS_INFO("fusion inited");
 }
 bool fusion::init_Points3f()
