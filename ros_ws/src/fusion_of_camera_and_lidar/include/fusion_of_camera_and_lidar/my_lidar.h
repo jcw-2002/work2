@@ -10,6 +10,7 @@ class my_lidar
     //实现雷达的回调函数
 private:
     pcl::PointCloud<pcl::PointXYZ>::Ptr points_cloud_ptr; //存储转换后的雷达点云
+    bool called;
 
 public:
     my_lidar(); //初始化获取pcl点云指针

@@ -143,6 +143,7 @@ add_library(my_lidar
   src/my_lidar.cpp
   # include/${PROJECT_NAME}/my_lidar.h
 )
+target_link_libraries(my_lidar ${PCL_LIBRARIES})
 add_library(my_camera
   src/my_camera.cpp
   # include/${PROJECT_NAME}/my_camera.h
@@ -156,7 +157,7 @@ add_library(fusion
   # include/${PROJECT_NAME}/my_lidar.h
   # include/${PROJECT_NAME}/my_camera.h
 )
-target_link_libraries(fusion my_config)
+target_link_libraries(fusion my_config my_lidar my_camera)
 
 
 # link_directories(include/${PROJECT_NAME})

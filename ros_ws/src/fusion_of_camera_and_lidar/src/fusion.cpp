@@ -16,8 +16,12 @@
 #include <pcl/point_types.h>
 #include <pcl/common/transforms.h> //用于pcl点云坐标变换
 
-fusion::fusion(ros::Publisher fused_image_pub)
+fusion::fusion(ros::NodeHandle n)
 {
+    this->n = n;
+    this->fused_image_pub = n.advertise<sensor_msgs::Image>("/fusion_image", 100);
+    this->lidar_sub = n.subscribe("/rslidar_points", 10, &my_lidar::lidarCallback, &(this->car_lidar));
+    this->camera_sub = n.subscribe("/camera/color/image_raw", 10, &my_camera::cameraCallback, &(this->car_camera));
     int temp_color[21][3] = {{255, 0, 0}, {255, 69, 0}, {255, 99, 71}, {255, 140, 0}, {255, 165, 0}, {238, 173, 14}, {255, 193, 37}, {255, 255, 0}, {255, 236, 139}, {202, 255, 112}, {0, 255, 0}, {84, 255, 159}, {127, 255, 212}, {0, 229, 238}, {152, 245, 255}, {178, 223, 238}, {126, 192, 238}, {28, 134, 238}, {0, 0, 255}, {72, 118, 255}, {122, 103, 238}};
     // this->color = temp_color;
     std::copy(&temp_color[0][0], &temp_color[0][0] + 21 * 3, &this->color[0][0]);
@@ -26,9 +30,13 @@ fusion::fusion(ros::Publisher fused_image_pub)
     this->fused_image_pub = fused_image_pub; //初始化发布者句柄。
     ROS_INFO("fusion inited");
 }
-void fusion::init_Points3f()
+bool fusion::init_Points3f()
 {
     //将点云插入到OpenCV的三维点数据中
+    if (this->points3d.size() <= 1)
+    {
+        return false;
+    }
     this->points3d.reserve(this->car_lidar.get_cloud_ptr()->size() + 1);
     cv::Point3f point;
     for (size_t i = 0; i < this->car_lidar.get_cloud_ptr()->size(); i++)
@@ -37,7 +45,7 @@ void fusion::init_Points3f()
         point.y = this->car_lidar.get_cloud_ptr()->points[i].y;
         point.z = this->car_lidar.get_cloud_ptr()->points[i].z;
     }
-    return;
+    return true;
 }
 
 void fusion::init_color()
@@ -63,8 +71,12 @@ void fusion::init_color()
     return;
 }
 
-void fusion::point_to_image()
+bool fusion::point_to_image()
 {
+    if (!this->car_camera.iscalled())
+    {
+        return false;
+    }
     //在圈出来之前，融合图应该初始化为相机图像。
     for (size_t i = 0; i < this->projectedPoints.size(); i++)
     {
@@ -75,7 +87,7 @@ void fusion::point_to_image()
             cv::circle(this->fused_image, p, 1, this->dis_color[i], 1, 8, 0);
         }
     }
-    return;
+    return true;
 }
 
 void fusion::projection()
@@ -84,7 +96,11 @@ void fusion::projection()
 
     //应当从雷达中获取到了点云消息
     // 将点云消息转到用OpenCV存储的格式
-    this->init_Points3f();
+    if (!this->init_Points3f())
+    {
+        ROS_INFO("no points topic!");
+        return;
+    }
 
     //使用pcl库将原始的点云进行坐标变换，得到相机坐标系下的点云坐标
     pcl::transformPointCloud(*(this->car_lidar.get_cloud_ptr()), *(this->transformed_cloud), this->fusion_config.transform); // lidar coordinate(forward x+, left y+, up z+)
@@ -96,9 +112,14 @@ void fusion::projection()
     this->fused_image = this->car_camera.get_image_ptr()->image;
 
     //根据前面给每个点赋予的颜色对投影到相机图片上的点进行渲染（通过画圈的方式）
-    this->point_to_image();
+    if (!this->point_to_image())
+    {
+        ROS_INFO("No image topic found! waiting subscribe");
+        return;
+    }
 
     //至此，图片融合数据处理部分已经完成！
+    ROS_INFO("fused image successfully!");
     return;
 }
 
@@ -115,6 +136,26 @@ void fusion::show_fused_image()
 {
     ROS_INFO("To be continued!");
     return;
+}
+
+void fusion::publish_thread()
+{
+    static ros::Rate rate(10);
+    while (ros::ok())
+    {
+        ROS_INFO("publish fused image!");
+        this->projection();
+        this->publish_fused_image();
+        rate.sleep();
+    }
+    return;
+}
+
+void fusion::test_spin()
+{
+    ROS_INFO("start spin");
+    ros::spin();
+    ROS_INFO("end spin");
 }
 
 fusion::~fusion()

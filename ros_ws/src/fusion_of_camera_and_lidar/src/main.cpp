@@ -29,8 +29,8 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "fusion_of_camera_and_lidar_node");
     ros::NodeHandle n;
 
-    ros::Publisher fused_image_pub = n.advertise<sensor_msgs::Image>("/fusion_image", 100);
-    fusion my_fusion(fused_image_pub);
+    // ros::Publisher fused_image_pub = n.advertise<sensor_msgs::Image>("/fusion_image", 100);
+    fusion my_fusion(n);
     // std::function<void(const sensor_msgs::PointCloud2ConstPtr &)> car_lidar_Callback = [&my_fusion](const sensor_msgs::PointCloud2ConstPtr &msg)
     // { my_fusion.car_lidar.lidarCallback(msg); };
     // std::function<void(const sensor_msgs::ImageConstPtr &)> car_camera_Callback = [&my_fusion](const sensor_msgs::ImageConstPtr &msg)
@@ -43,23 +43,30 @@ int main(int argc, char **argv)
 
     // ros::Subscriber camera_sub = n.subscribe("/camera/color/image_raw", 10, lambda2func<const sensor_msgs::ImageConstPtr &>([&my_fusion](const sensor_msgs::ImageConstPtr &msg)
     //                                                                                                                         { my_fusion.car_camera.cameraCallback(msg); }));
-    auto lidar_fun =
-        [&n, &my_fusion]()
-    { ros::Subscriber lidar_sub = n.subscribe("/rslidar_points", 10, &my_lidar::lidarCallback, &(my_fusion.car_lidar)); };
-    auto camera_fun =
-        [&n, &my_fusion]()
-    {
-        ros::Subscriber camera_sub = n.subscribe("/camera/color/image_raw", 10, &my_camera::cameraCallback, &(my_fusion.car_camera));
-    };
+    // auto lidar_fun =
+    //     [&n, &my_fusion]()
+    // { ros::Subscriber lidar_sub = n.subscribe("/rslidar_points", 10, &my_lidar::lidarCallback, &(my_fusion.car_lidar)); };
+    // auto camera_fun =
+    //     [&n, &my_fusion]()
+    // {
+    //     ros::Subscriber camera_sub = n.subscribe("/camera/color/image_raw", 10, &my_camera::cameraCallback, &(my_fusion.car_camera));
+    // };
 
-    std::thread lidar_thread(lidar_fun), camera_thread(camera_fun);
-    while (ros::ok())
-    {
-        ROS_INFO("start while");
-        lidar_thread.join();
-        camera_thread.join();
-        my_fusion.publish_fused_image();
-    }
+    // std::thread lidar_thread(lidar_fun), camera_thread(camera_fun);
+    // while (ros::ok())
+    // {
+    //     ROS_INFO("start while");
+    //     lidar_thread.join();
+    //     camera_thread.join();
+    //     my_fusion.publish_fused_image();
+    // }
+
+    std::thread subscribe_thread(&fusion::test_spin, &my_fusion);
+    std::thread publish_thread(&fusion::publish_thread, &my_fusion);
+    // my_fusion.test_spin();
+    subscribe_thread.join();
+    publish_thread.join();
+
     // ros::spin();
     return 0;
 }

@@ -15,7 +15,7 @@ my_lidar::my_lidar()
 void my_lidar::lidarCallback(const sensor_msgs::PointCloud2ConstPtr &msg)
 {
     //将激光雷达信息转化为pcl可用数据类型
-    // ROS_INFO("lidarCallback");
+    ROS_INFO("lidarCallback");
     pcl::fromROSMsg(*msg, *(this->points_cloud_ptr));
     return;
 }
