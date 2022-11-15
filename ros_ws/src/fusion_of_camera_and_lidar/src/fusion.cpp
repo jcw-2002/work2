@@ -84,10 +84,12 @@ bool fusion::point_to_image()
         return false;
     }
     //在圈出来之前，融合图应该初始化为相机图像。
+    //并且在圈出来之前，点云应当投影到相机图像上（生成二维点云）
     for (size_t i = 0; i < this->projectedPoints.size(); i++)
     {
         cv::Point2f p = this->projectedPoints[i];
-        if (p.y < 480 && p.y >= 0 && p.x < 640 && p.x >= 0 && this->transformed_cloud->points[i].z > 0)
+        ROS_INFO("start to circle color");
+        // if (p.y < 480 && p.y >= 0 && p.x < 640 && p.x >= 0 && this->transformed_cloud->points[i].z > 0)
         {
             //把在照片正面的，照片尺寸之内的点云在图像中圈出来。
             cv::circle(this->fused_image, p, 1, this->dis_color[i], 1, 8, 0);
@@ -117,6 +119,9 @@ bool fusion::projection()
 
     //初始化融合后的图像fused_image为原始的相机图片
     this->fused_image = this->car_camera.get_image_ptr()->image;
+
+//在画圈之前必须要先把点云投影到二维，这样才知道该在哪里画圈
+    cv::projectPoints(this->points3d,this->fusion_config.rotate_mat, this->fusion_config.transform_vec,this->fusion_config.camera_mat,this->fusion_config.dist_coeff,this->projectedPoints);
 
     //根据前面给每个点赋予的颜色对投影到相机图片上的点进行渲染（通过画圈的方式）
     if (!this->point_to_image())
