@@ -133,7 +133,7 @@ bool fusion::projection()
 void fusion::publish_fused_image()
 {
     //把融合图像发布出去
-    this->fused_image_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8").toImageMsg();
+    this->fused_image_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8",this->fused_image).toImageMsg();
     this->fused_image_pub.publish(this->fused_image_msg);
     ROS_INFO("fusion image published!");
     return;
