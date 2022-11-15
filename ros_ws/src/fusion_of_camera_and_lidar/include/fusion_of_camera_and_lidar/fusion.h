@@ -49,7 +49,7 @@ public:
     my_lidar car_lidar;
     my_camera car_camera;
     fusion(ros::NodeHandle n);
-    void projection();          //生成融合图
+    bool projection();          //生成融合图
     void publish_fused_image(); //发布融合图消息
     void publish_thread();
     void show_fused_image();    //并用OpenCV窗口显示融合图

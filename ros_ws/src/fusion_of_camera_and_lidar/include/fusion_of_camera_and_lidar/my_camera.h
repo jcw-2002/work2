@@ -10,7 +10,8 @@ class my_camera
     //实现相机回调函数
 private:
     cv_bridge::CvImagePtr cv_image_ptr; //存储转换后的相机图像数据
-    bool called;//判断是否被调用过回调函数
+    // cv_bridge::Cv
+    bool called; //判断是否被调用过回调函数
     // cv::Mat image;
 
 public:

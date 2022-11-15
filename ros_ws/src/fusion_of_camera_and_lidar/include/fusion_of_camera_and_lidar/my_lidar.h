@@ -13,7 +13,9 @@ private:
     bool called;
 
 public:
+
     my_lidar(); //初始化获取pcl点云指针
+    bool iscalled();
     void lidarCallback(const sensor_msgs::PointCloud2ConstPtr &);
     pcl::PointCloud<pcl::PointXYZ>::Ptr get_cloud_ptr();
     ~my_lidar();
