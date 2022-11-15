@@ -18,8 +18,8 @@
 
 fusion::fusion(ros::NodeHandle n)
 {
-     pcl::PointCloud<pcl::PointXYZ>::Ptr temp_ptr(new  pcl::PointCloud<pcl::PointXYZ>);
-    this->transformed_cloud=temp_ptr;//指针要初始化
+    pcl::PointCloud<pcl::PointXYZ>::Ptr temp_ptr(new pcl::PointCloud<pcl::PointXYZ>);
+    this->transformed_cloud = temp_ptr; //指针要初始化
     this->n = n;
     this->fused_image_pub = n.advertise<sensor_msgs::Image>("/fusion_image", 100);
     this->lidar_sub = n.subscribe("/rslidar_points", 10, &my_lidar::lidarCallback, &(this->car_lidar));
@@ -60,8 +60,8 @@ void fusion::init_color()
     // using the extrinsic matrix between this two coordinate system
 
     //这段初始化颜色信息的前提是获得了激光雷达点云坐标变换后的点
-    this->dis_color.clear();//给存颜色信息的vector重置
-    this->dis_color.reserve(this->car_lidar.get_cloud_ptr()->size()+1);
+    this->dis_color.clear(); //给存颜色信息的vector重置
+    this->dis_color.reserve(this->car_lidar.get_cloud_ptr()->size() + 1);
     for (size_t i = 0; i < this->transformed_cloud->points.size(); i++)
     {
         if (this->transformed_cloud->points[i].z > 0) //渲染显示照片正面的点云
@@ -88,8 +88,8 @@ bool fusion::point_to_image()
     for (size_t i = 0; i < this->projectedPoints.size(); i++)
     {
         cv::Point2f p = this->projectedPoints[i];
-        ROS_INFO("start to circle color");
-        // if (p.y < 480 && p.y >= 0 && p.x < 640 && p.x >= 0 && this->transformed_cloud->points[i].z > 0)
+        // ROS_INFO("start to circle color");
+        if (p.y < 480 && p.y >= 0 && p.x < 640 && p.x >= 0 && this->transformed_cloud->points[i].z > 0)
         {
             //把在照片正面的，照片尺寸之内的点云在图像中圈出来。
             cv::circle(this->fused_image, p, 1, this->dis_color[i], 1, 8, 0);
@@ -120,8 +120,9 @@ bool fusion::projection()
     //初始化融合后的图像fused_image为原始的相机图片
     this->fused_image = this->car_camera.get_image_ptr()->image;
 
-//在画圈之前必须要先把点云投影到二维，这样才知道该在哪里画圈
-    cv::projectPoints(this->points3d,this->fusion_config.rotate_mat, this->fusion_config.transform_vec,this->fusion_config.camera_mat,this->fusion_config.dist_coeff,this->projectedPoints);
+    //在画圈之前必须要先把点云投影到二维，这样才知道该在哪里画圈
+    this->projectedPoints.clear(); //清空之前的点
+    cv::projectPoints(this->points3d, this->fusion_config.rotate_mat, this->fusion_config.transform_vec, this->fusion_config.camera_mat, this->fusion_config.dist_coeff, this->projectedPoints);
 
     //根据前面给每个点赋予的颜色对投影到相机图片上的点进行渲染（通过画圈的方式）
     if (!this->point_to_image())
@@ -138,7 +139,7 @@ bool fusion::projection()
 void fusion::publish_fused_image()
 {
     //把融合图像发布出去
-    this->fused_image_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8",this->fused_image).toImageMsg();
+    this->fused_image_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", this->fused_image).toImageMsg();
     this->fused_image_pub.publish(this->fused_image_msg);
     ROS_INFO("fusion image published!");
     return;
