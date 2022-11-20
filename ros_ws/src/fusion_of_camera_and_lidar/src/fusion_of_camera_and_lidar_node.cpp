@@ -12,6 +12,7 @@ using namespace std;
 
 #include <pcl/point_cloud.h> /* /usr/include/pcl-1.7/pcl */ /* 依赖/usr/include/eigen3/Eigen/ */
 #include <pcl/point_types.h>                                //提供各种点云数据类型
+#include <pcl/visualization/cloud_viewer.h>                 //提供pcl可视化窗口
 
 #include <opencv2/opencv.hpp>
 
@@ -23,18 +24,24 @@ ros::Publisher cloud_pub;
 cv::Mat extrinsic_mat, camera_mat, dist_coeff;
 cv::Mat rotate_mat, transform_vec;
 
+static pcl::visualization::CloudViewer pclviewer("point cloud"); //创建一个pcl的窗口，在外面全局的，只创建一次
+
+static const std::string origin_image = "origin image";
+static const std::string fused_image = "fused image";
+
 int color[21][3] = {{255, 0, 0}, {255, 69, 0}, {255, 99, 71}, {255, 140, 0}, {255, 165, 0}, {238, 173, 14}, {255, 193, 37}, {255, 255, 0}, {255, 236, 139}, {202, 255, 112}, {0, 255, 0}, {84, 255, 159}, {127, 255, 212}, {0, 229, 238}, {152, 245, 255}, {178, 223, 238}, {126, 192, 238}, {28, 134, 238}, {0, 0, 255}, {72, 118, 255}, {122, 103, 238}};
 
 float color_dis = 1.2; //参考另外GitHub仓库
 
 void projection();
+void Image_Show(cv::Mat &cv_image, const std::string &title);
 
 void lidarCallback(const sensor_msgs::PointCloud2ConstPtr &msg)
 {
     //将激光雷达信息转化为pcl可用数据类型
     ROS_INFO("lidarCallback");
     pcl::fromROSMsg(*msg, *cloud);
-
+    pclviewer.showCloud(cloud); //用pcl显示点云
     return;
 }
 // void get_lidar(ros::NodeHandle &n)
@@ -49,6 +56,7 @@ void cameraCallback(const sensor_msgs::ImageConstPtr &msg)
     static cv_bridge::CvImagePtr cv_image;
     cv_image = cv_bridge::toCvCopy(msg);
     image = cv_image->image;
+    Image_Show(cv_image->image, origin_image);
     projection();
     return;
 }
@@ -85,6 +93,18 @@ void pre_process()
     transform_vec.at<double>(0) = extrinsic_mat.at<double>(1, 3);
     transform_vec.at<double>(1) = extrinsic_mat.at<double>(2, 3);
     transform_vec.at<double>(2) = extrinsic_mat.at<double>(0, 3);
+}
+
+void Image_Show(cv::Mat &cv_image, const std::string &title)
+{
+    //把image显示出来。
+    cv::imshow(title, cv_image);
+    if (cv::waitKey(1) == 27) //设置等待时间为1ms
+    {
+        ros::shutdown();
+        cv::destroyAllWindows();
+    } //按esc退出
+    return;
 }
 
 void projection()
@@ -158,9 +178,11 @@ void projection()
             cv::circle(image, p, 1, dis_color[i], 1, 8, 0); //画圆圈标识
         }
     }
+
     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg(); //将融合后的图像转换为ros消息
     image_pub.publish(msg);
     ROS_INFO("fusion image published!");
+    Image_Show(image, fused_image);
     return;
 }
 
@@ -183,6 +205,8 @@ int main(int argc, char **argv)
 
     // priv_nh.getParam("color_distance", color_dis); //获取参数
     // ROS_INFO("color_dis-init=%0.6f", color_dis);
+    cv::namedWindow(origin_image);
+    cv::namedWindow(fused_image);
     image_pub = n.advertise<sensor_msgs::Image>("fusion", 100);
     cloud_pub = n.advertise<sensor_msgs::PointCloud2>("rgb_cloud", 100);
     ros::Subscriber lidar_sub = n.subscribe("/rslidar_points", 10, lidarCallback);

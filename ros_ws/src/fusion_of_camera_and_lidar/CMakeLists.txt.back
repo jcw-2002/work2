@@ -125,12 +125,40 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
+  include/${PROJECT_NAME}
 )
 # aux_source_directory(include/${PROJECT_NAME} DIR_SRCS)
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/fusion_of_camera_and_lidar.cpp
 # )
+
+add_library(my_config
+  src/my_config.cpp
+  # include/${PROJECT_NAME}/my_config.h
+)
+
+
+add_library(my_lidar
+  src/my_lidar.cpp
+  # include/${PROJECT_NAME}/my_lidar.h
+)
+target_link_libraries(my_lidar ${PCL_LIBRARIES})
+add_library(my_camera
+  src/my_camera.cpp
+  # include/${PROJECT_NAME}/my_camera.h
+)
+target_link_libraries(my_camera  ${catkin_LIBRARIES})
+
+add_library(fusion
+  src/fusion.cpp
+  # include/${PROJECT_NAME}/fusion.h
+  # include/${PROJECT_NAME}/my_config.h
+  # include/${PROJECT_NAME}/my_lidar.h
+  # include/${PROJECT_NAME}/my_camera.h
+)
+target_link_libraries(fusion my_config my_lidar my_camera)
+
 
 # link_directories(include/${PROJECT_NAME})
 
@@ -147,7 +175,7 @@ include_directories(
 # set(CMAKE_CXX_FLAGS -pthread)
 # message(STATUS "CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
 
-add_executable(${PROJECT_NAME}_node src/${PROJECT_NAME}_node.cpp)
+add_executable(${PROJECT_NAME}_node src/main.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -170,6 +198,11 @@ target_link_libraries(${PROJECT_NAME}_node
   ${PCL_LIBRARIES}
   ${OpenCV_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
+  # ${DIR_SRCS}
+  my_camera
+  # my_config
+  my_lidar
+  fusion
 )
 #############
 ## Install ##
