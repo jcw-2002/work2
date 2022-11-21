@@ -1,4 +1,8 @@
 # 松灵小车任务2
+
+演示视频:
+[【松灵小车任务2】]( https://www.bilibili.com/video/BV1qg411v73u/?share_source=copy_web&vd_source=fca992aae88da7e9673b87508ef82aa8) https://www.bilibili.com/video/BV1qg411v73u/?share_source=copy_web&vd_source=fca992aae88da7e9673b87508ef82aa8
+
 ## 生成融合图
 生成方法参考[CSDN博客](https://blog.csdn.net/qq_38222947/article/details/125146447)
 
