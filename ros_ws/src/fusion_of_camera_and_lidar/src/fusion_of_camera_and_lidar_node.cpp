@@ -50,16 +50,40 @@ void lidarCallback(const sensor_msgs::PointCloud2ConstPtr &msg)
 //     return;
 // }
 
+// void cameraCallback(const sensor_msgs::ImageConstPtr &msg)
+// {
+//     ROS_INFO("cameraCallback");
+//     static cv_bridge::CvImagePtr cv_image;
+//     cv_image = cv_bridge::toCvCopy(msg);
+//     image = cv_image->image;
+//     Image_Show(cv_image->image, origin_image);
+//     projection();
+//     return;
+// }
 void cameraCallback(const sensor_msgs::ImageConstPtr &msg)
 {
     ROS_INFO("cameraCallback");
+
     static cv_bridge::CvImagePtr cv_image;
-    cv_image = cv_bridge::toCvCopy(msg);
+    
+    // 将图像转换为 BGR8 格式
+    try
+    {
+        cv_image = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+    }
+    catch (const cv_bridge::Exception &e)
+    {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+        return;
+    }
+
     image = cv_image->image;
     Image_Show(cv_image->image, origin_image);
     projection();
     return;
 }
+
+
 
 // void get_camera(ros::NodeHandle &n)
 // {
